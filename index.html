@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Presupuesto Acuícola</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <div class="max-w-5xl mx-auto py-10 px-4">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-blue-900">Programa de Apoyo a la Semilla Acuícola</h1>
+            <p class="text-slate-500 mt-2">Monitoreo de presupuesto y padrón de beneficiarios</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-blue-500">
+                <p class="text-sm text-slate-500 uppercase font-bold">Presupuesto Total</p>
+                <h2 class="text-2xl font-mono text-slate-800">$35,723,233.13</h2>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-red-500">
+                <p class="text-sm text-slate-500 uppercase font-bold">Monto Asignado</p>
+                <h2 id="gastado" class="text-2xl font-mono text-slate-800">$0.00</h2>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-green-500">
+                <p class="text-sm text-slate-500 uppercase font-bold">Saldo Restante</p>
+                <h2 id="saldo" class="text-2xl font-mono text-green-600">$35,723,233.13</h2>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-100">
+                    <tr>
+                        <th class="p-4 font-semibold">Beneficiario</th>
+                        <th class="p-4 font-semibold">Semilla</th>
+                        <th class="p-4 font-semibold text-right">Monto</th>
+                        <th class="p-4 font-semibold">Lugar</th>
+                        <th class="p-4 font-semibold">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-cuerpo">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo (Esto podrías conectarlo luego con un JSON generado por tu Python)
+        const presupuestoInicial = 35723233.13;
+        const beneficiarios = [
+            { nombre: "Cooperativa Mar del Sur", semilla: "Tilapia", monto: 125000.00, lugar: "Sinaloa", fecha: "23/04/2026" },
+            { nombre: "Acuícola del Norte", semilla: "Camarón blanco", monto: 85400.50, lugar: "Sonora", fecha: "22/04/2026" }
+        ];
+
+        function cargarDatos() {
+            const tabla = document.getElementById('tabla-cuerpo');
+            let totalGastado = 0;
+
+            beneficiarios.forEach(b => {
+                totalGastado += b.monto;
+                const fila = `
+                    <tr class="border-t hover:bg-slate-50">
+                        <td class="p-4">${b.nombre}</td>
+                        <td class="p-4">${b.semilla}</td>
+                        <td class="p-4 text-right font-mono">$${b.monto.toLocaleString()}</td>
+                        <td class="p-4">${b.lugar}</td>
+                        <td class="p-4 text-slate-500">${b.fecha}</td>
+                    </tr>
+                `;
+                tabla.innerHTML += fila;
+            });
+
+            const saldo = presupuestoInicial - totalGastado;
+            document.getElementById('gastado').innerText = `$${totalGastado.toLocaleString()}`;
+            document.getElementById('saldo').innerText = `$${saldo.toLocaleString()}`;
+        }
+
+        cargarDatos();
+    </script>
+</body>
+</html>
