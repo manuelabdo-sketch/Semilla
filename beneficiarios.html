@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Programas y Presupuesto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.6rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        /* Animación suave para filas nuevas */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .row-animate {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-3xl font-bold text-slate-900">Panel de Control Presupuestario</h1>
+                <p class="text-slate-500 italic">Los datos se guardan automáticamente en este navegador</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition">
+                    Imprimir Reporte
+                </button>
+                <button onclick="exportarCSV()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 transition">
+                    Descargar Excel (CSV)
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card p-6 border-b-4 border-blue-500">
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Presupuesto Inicial</p>
+                <p class="text-2xl font-bold text-slate-800" id="presupuesto-inicial">$35,723,233.13</p>
+            </div>
+            <div class="card p-6 border-b-4 border-orange-500">
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Inversión Ejecutada</p>
+                <p class="text-2xl font-bold text-orange-600" id="total-gastado">$0.00</p>
+            </div>
+            <div class="card p-6 border-b-4 border-emerald-500">
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Saldo Remanente</p>
+                <p class="text-2xl font-bold text-emerald-600" id="presupuesto-disponible">$35,723,233.13</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Formulario -->
+            <div class="lg:col-span-4">
+                <div class="card p-6 sticky top-8">
+                    <h2 class="text-lg font-bold mb-5 text-slate-800 flex items-center">
+                        <span class="bg-blue-100 text-blue-600 p-2 rounded-lg mr-2">
+                            <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        Nuevo Registro
+                    </h2>
+                    <form id="beneficiario-form" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre del Beneficiario</label>
+                            <input type="text" id="nombre" required class="input-field" placeholder="Nombre completo">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Monto ($)</label>
+                                <input type="number" id="monto" step="0.01" required class="input-field" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Fecha</label>
+                                <input type="date" id="fecha" required class="input-field">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Especie / Recurso Entregado</label>
+                            <input type="text" id="especie" required class="input-field" placeholder="Ej. Fertilizante Urea">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Lugar de Entrega</label>
+                            <input type="text" id="lugar" required class="input-field" placeholder="Localidad / Municipio">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-200 transition duration-200 transform active:scale-95">
+                            Registrar Entrega
+                        </button>
+                    </form>
+                    <div id="mensaje-error" class="hidden mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium"></div>
+                </div>
+            </div>
+
+            <!-- Tabla de Datos -->
+            <div class="lg:col-span-8">
+                <div class="card overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <h2 class="text-lg font-bold text-slate-800">Historial de Operaciones</h2>
+                        <span id="contador-registros" class="bg-slate-200 text-slate-700 text-xs font-bold px-2.5 py-1 rounded-full">0 registros</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Beneficiario</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Especie / Lugar</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Monto</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-cuerpo" class="divide-y divide-slate-100">
+                                <!-- Filas dinámicas -->
+                            </tbody>
+                        </table>
+                        <div id="tabla-vacia" class="p-20 text-center flex flex-col items-center">
+                            <svg xmlns="http://www.w3.org/2003/svg" class="h-12 w-12 text-slate-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p class="text-slate-400 font-medium">No se han encontrado registros en este dispositivo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PRESUPUESTO_TOTAL = 35723233.13;
+        // Cargamos los datos desde localStorage para que persistan entre pestañas
+        let registros = JSON.parse(localStorage.getItem('beneficiarios_app_data')) || [];
+
+        const form = document.getElementById('beneficiario-form');
+        const tablaCuerpo = document.getElementById('tabla-cuerpo');
+        const tablaVacia = document.getElementById('tabla-vacia');
+        const mensajeError = document.getElementById('mensaje-error');
+        const contadorLabel = document.getElementById('contador-registros');
+
+        const elGasto = document.getElementById('total-gastado');
+        const elDisponible = document.getElementById('presupuesto-disponible');
+
+        function formatearMoneda(valor) {
+            return new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'MXN',
+            }).format(valor);
+        }
+
+        function actualizarDashboard() {
+            const gastado = registros.reduce((acc, curr) => acc + parseFloat(curr.monto), 0);
+            const disponible = PRESUPUESTO_TOTAL - gastado;
+
+            elGasto.textContent = formatearMoneda(gastado);
+            elDisponible.textContent = formatearMoneda(disponible);
+            contadorLabel.textContent = `${registros.length} registro${registros.length !== 1 ? 's' : ''}`;
+
+            // Cambiar color si el presupuesto es negativo
+            if (disponible < 0) {
+                elDisponible.classList.remove('text-emerald-600');
+                elDisponible.classList.add('text-red-600');
+            } else {
+                elDisponible.classList.add('text-emerald-600');
+                elDisponible.classList.remove('text-red-600');
+            }
+
+            renderizarTabla();
+            // Guardamos en localStorage cada vez que hay un cambio
+            localStorage.setItem('beneficiarios_app_data', JSON.stringify(registros));
+        }
+
+        function renderizarTabla() {
+            if (registros.length === 0) {
+                tablaVacia.classList.remove('hidden');
+                tablaCuerpo.innerHTML = '';
+                return;
+            }
+
+            tablaVacia.classList.add('hidden');
+            tablaCuerpo.innerHTML = registros.map((reg, index) => `
+                <tr class="hover:bg-slate-50 transition-colors row-animate">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-bold text-slate-800">${reg.nombre}</div>
+                        <div class="text-xs text-slate-400 font-medium">${reg.fecha}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-slate-600 text-center font-medium">${reg.especie}</div>
+                        <div class="text-xs text-blue-500 text-center font-bold uppercase">${reg.lugar}</div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="text-sm font-bold text-slate-900">${formatearMoneda(reg.monto)}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="eliminarRegistro(${index})" class="p-2 text-slate-300 hover:text-red-500 transition-colors" title="Eliminar">
+                            <svg xmlns="http://www.w3.org/2003/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            mensajeError.classList.add('hidden');
+
+            const monto = parseFloat(document.getElementById('monto').value);
+            const gastadoActual = registros.reduce((acc, curr) => acc + parseFloat(curr.monto), 0);
+
+            if (gastadoActual + monto > PRESUPUESTO_TOTAL) {
+                mensajeError.innerHTML = "<strong>Aviso:</strong> El monto ingresado excede el presupuesto disponible.";
+                mensajeError.classList.remove('hidden');
+            }
+
+            const nuevoRegistro = {
+                id: Date.now(),
+                nombre: document.getElementById('nombre').value,
+                monto: monto,
+                especie: document.getElementById('especie').value,
+                lugar: document.getElementById('lugar').value,
+                fecha: document.getElementById('fecha').value
+            };
+
+            registros.unshift(nuevoRegistro);
+            form.reset();
+            actualizarDashboard();
+        });
+
+        function eliminarRegistro(index) {
+            if(confirm("¿Seguro que desea eliminar este registro? El monto será devuelto al presupuesto.")) {
+                registros.splice(index, 1);
+                actualizarDashboard();
+            }
+        }
+
+        function exportarCSV() {
+            if (registros.length === 0) return;
+            
+            let csv = "\uFEFF"; // BOM para Excel en Español
+            csv += "Beneficiario,Monto,Especie,Lugar,Fecha\n";
+            registros.forEach(r => {
+                csv += `"${r.nombre.replace(/"/g, '""')}",${r.monto},"${r.especie.replace(/"/g, '""')}","${r.lugar.replace(/"/g, '""')}",${r.fecha}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Reporte_Presupuesto_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Carga inicial
+        actualizarDashboard();
+    </script>
+</body>
+</html>
